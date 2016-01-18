@@ -15,6 +15,11 @@ packagelist=(
   # Image resizing
   imagemagick
 
+  # Command-line JSON parser.
+  # See https://github.com/micha/jsawk &
+  # http://blog.xebia.com/json-shell-scripting-with-jsawk/
+  jsawk
+
   # PhantomJS is a headless WebKit scriptable with a JavaScript API
   phantomjs
 

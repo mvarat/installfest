@@ -18,19 +18,21 @@ mac/os_repair_permissions
 rbenv_remove_rvm
 mac/macports_remove
 
-github_capture_credentials
-github_add_ssh_key
-
 mac/homebrew_install
 mac/homebrew_ensure_install
 
 mac/homebrew_install_core_libs
+mac/homebrew_install_core_utils
+mac/homebrew_install_cli_apps
 ## the above is used to compile languages and libs, so must come first
 
 ## the below uses brew, so must come after
 mac/git_install_hb
 git_completion
 git_configure
+
+github_capture_credentials
+github_add_ssh_key
 
 rbenv_install
 rbenv_set_default_gems
@@ -41,8 +43,6 @@ mac/nvm_setup
 nvm_install
 nvm_install_version
 
-mac/homebrew_install_core_utils
-mac/homebrew_install_cli_apps
 mac/homebrew_install_gui_apps
 mac/postgres_install_hb
 

@@ -1,0 +1,34 @@
+utils/script_header
+
+utils/script_env_vars
+utils/define_terminal_colors
+utils/log_file
+utils/log_screen
+
+utils/script_instructions
+utils/password_capture
+
+mac/os_version
+mac/os_ensure_valid_setup
+
+mac/os_update_software
+mac/os_install_commandline_tools
+mac/os_repair_permissions
+
+mac/homebrew_install
+mac/homebrew_ensure_install
+
+mac/homebrew_install_core_libs
+mac/homebrew_install_core_utils
+mac/homebrew_install_cli_apps
+## the above is used to compile languages and libs, so must come first
+
+## the below uses brew, so must come after
+mac/git_install_hb
+git_completion
+git_configure
+
+# github_capture_credentials
+# github_add_ssh_key
+
+utils/script_footer

@@ -1,10 +1,22 @@
 #-------------------------------------------------------------------------------
-# Create and Upload SSH key (github_add_ssh_key.sh)
+# Create and Upload SSH key. This script assumes jsawk is installed, and
+# must come after scripts/mac/homebrew_install_cli_apps. (github_add_ssh_key.sh)
 #-------------------------------------------------------------------------------
 
 # SSH keys establish a secure connection between your computer and GitHub
 # This script follows these instructions
 # `https://help.github.com/articles/generating-ssh-keys`
+
+# Steps:
+# 0. check user credentials: if they fail announce and skip the rest.
+# 1. check for SSH keys stored on GitHub
+# 2. if there is an SSH key on GitHub, announce and skip the rest; else
+# 3. check for local SSH keys: store in variable,
+# 4. if there are keys:
+#   a. if there is a key id_rsa.pub, send it.
+#   b. if there is another key, notify, warn, and suggest it be sent after.
+# 5. if there are no keys, then generate an id_rsa key and send.
+#   a. If sending fails, announce.
 
 # SSH Keygen
 inform "Generating an SSH key to establish a secure connection " true
