@@ -2,15 +2,16 @@
 # Use Brew Cask to install application images (mac/homebrew_install_apps.sh)
 #-------------------------------------------------------------------------------
 
-inform "Installing Homebrew Cask, to handle Mac binaries (apps)..." true
-# a CLI workflow for the administration of Mac applications
-# distributed as binaries
 # PJ: REMOVED THE BELOW, now that cask has been added to Homebrew
 # See https://github.com/caskroom/homebrew-cask/pull/15381
+# inform "Installing Homebrew Cask, to handle Mac binaries (apps)..." true
+# a CLI workflow for the administration of Mac applications
+# distributed as binaries
 # brew tap phinze/homebrew-cask
 # brew install brew-cask
 
 # load a tap of different versions of apps (for Sublime Text 3)
+inform "Tapping Homebrew Cask's versions, for ST3..." true
 brew tap caskroom/versions
 show "Complete!"
 
