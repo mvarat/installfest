@@ -1,0 +1,334 @@
+#!/usr/bin/env bash
+
+COMPILED_AT='Mon Jan 18 01:00:44 PST 2016'
+#
+#  _           _        _ _  __           _
+# (_)_ __  ___| |_ __ _| | |/ _| ___  ___| |_
+# | | '_ \/ __| __/ _` | | | |_ / _ \/ __| __|
+# | | | | \__ \ || (_| | | |  _|  __/\__ \ |_
+# |_|_| |_|___/\__\__,_|_|_|_|  \___||___/\__|
+#
+# Installation, Setup and Dotfile Creation Script
+# for Students of General Assemb.ly's WDI Program
+
+# Authors: Phillip Lamplugh, GA Instructor (2014),
+#          PJ Hughes, GA Instructor (2014 & 2015)
+
+# Resources:
+#
+# https://github.com/thoughtbot/laptop
+# https://github.com/toranb/ubuntu-development-machine
+# https://github.com/divio/osx-bootstrap
+# https://github.com/paulirish/dotfiles
+# https://github.com/mathiasbynens/dotfiles/
+# https://github.com/ndbroadbent/dotfiles
+
+# References:
+#
+# http://www.sudo.ws/
+# http://www.gnu.org/software/bash/manual/bashref.html
+# http://www.shellcheck.net
+# http://explainshell.com/
+
+#-------------------------------------------------------------------------------
+# Set up basic env vars (utils/script_env_vars.sh)
+#-------------------------------------------------------------------------------
+
+# Standard Bash Variables
+# `OSTYPE` A string describing the operating system Bash is running on.
+# `MACHTYPE` system type in cpu-company-system
+# `SECONDS` number of seconds since the shell was started.
+
+# FIXME (PJ) should have a better place to decide these versions:
+#   Ruby (rbenv), Python (pyenv), Node (nvm)
+BELOVED_RUBY_VERSION="2.2.3"
+CURRENT_STABLE_RUBY_VERSION="2.2.3"
+
+# TODO (pj) decide what the python versions should really be...
+#   and maybe come up with a bigger, better place to hang this info
+BELOVED_PYTHON_VERSION="anaconda-2.0.1"
+CURRENT_STABLE_PYTHON_VERSION="3.4.1"
+
+# NOT BEING USED YET, BUT SHOULD!
+NODE_VERSION="stable" # using nvm's language...
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  SYSTEM="mac"
+  BASH_FILE=".bash_profile"
+  MINIMUM_MAC_OS="10.7.0"
+else
+  SYSTEM="ubuntu"
+  BASH_FILE=".bashrc"
+fi
+
+SCRIPT_ROOT="$HOME/.wdi"
+
+# TODO (PJ) this needs to be more robust, BY FAR!
+SCRIPT_REPO="https://github.com/GA-WDI/installfest_script.git"
+SCRIPT_REPO_BRANCH="master"
+
+# the downloaded repo
+SCRIPT_DIR="$SCRIPT_ROOT/installfest"
+SCRIPT_SETTINGS="$SCRIPT_DIR/settings"
+
+SCRIPT_DOTFILES=$SCRIPT_SETTINGS/dotfiles/*
+SCRIPT_FONTS=$SCRIPT_SETTINGS/fonts/*
+SCRIPT_SUBL_SETTINGS=$SCRIPT_SETTINGS/sublime_settings/*
+SCRIPT_SUBL_PACKAGES=$SCRIPT_SETTINGS/sublime_packages/*
+SCRIPT_THEMES=$SCRIPT_SETTINGS/terminal/*
+
+# the working folder
+STUDENT_FOLDER="$HOME/code/wdi"
+
+# Deprecated as part of the utils/report_log.sh system...
+# TODO (PJ) update how reporting is done?
+# OWNER="ga-students"
+# REPO="wdi_melville_instructors"
+
+mkdir -p "$SCRIPT_ROOT"
+
+#-------------------------------------------------------------------------------
+# Set text formatting (utils/define_terminal_colors.sh)
+#-------------------------------------------------------------------------------
+
+# set 256 color profile where possible
+if [[ $COLORTERM == gnome-* && $TERM == xterm ]] && infocmp gnome-256color >/dev/null 2>&1; then
+  export TERM=gnome-256color
+elif infocmp xterm-256color >/dev/null 2>&1; then
+  export TERM=xterm-256color
+fi
+
+# Reset formatting
+RESET=$(      tput sgr0)
+
+# Foreground color
+BLACK=$(      tput setaf 0)
+RED=$(        tput setaf 1)
+GREEN=$(      tput setaf 2)
+YELLOW=$(     tput setaf 3)
+BLUE=$(       tput setaf 4)
+MAGENTA=$(    tput setaf 5)
+CYAN=$(       tput setaf 6)
+WHITE=$(      tput setaf 7)
+
+# Background color
+BG_BLACK=$(   tput setab 0)
+BG_RED=$(     tput setab 1)
+BG_GREEN=$(   tput setab 2)
+BG_YELLOW=$(  tput setab 3)
+BG_BLUE=$(    tput setab 4)
+BG_MAGENTA=$( tput setab 5)
+BG_CYAN=$(    tput setab 6)
+BG_WHITE=$(   tput setab 7)
+
+# Style
+UNDERLINE=$(  tput smul)
+NOUNDERLINE=$(tput rmul)
+BOLD=$(       tput bold)
+ITALIC=$(     tput sitm)
+
+#-------------------------------------------------------------------------------
+# Logging (utils/log_file.sh)
+#-------------------------------------------------------------------------------
+
+clear
+
+# set up logfile
+LOGFILE="$SCRIPT_ROOT/install.log"
+
+exec > >(tee $LOGFILE); exec 2>&1
+
+echo "Script compiled at: ${COMPILED_AT}"
+echo "Script execution begun: $(date)"
+echo ""
+
+# utils/log_screen.sh
+
+function show () {
+  echo -e "${BG_WHITE}${BLACK}> $* ${RESET}"
+}
+
+function inform () {
+  if [[ $2 ]]; then echo ""; fi
+  echo -e "${BG_GREEN}${BLACK}${BOLD}>>>>  $1 ${RESET}"
+}
+
+function warn () {
+  if [[ $2 ]]; then echo ""; fi
+  echo -e "${BG_YELLOW}${BLACK}${BOLD}>>>>  $1 ${RESET}"
+}
+
+function fail () {
+  if [[ $2 ]]; then echo ""; fi
+  echo -e "${BG_RED}${WHITE}${BOLD}>>>>  $1 ${RESET}"
+}
+
+function pause_awhile () {
+  if [[ $2 ]]; then echo ""; fi
+  echo -e "${BG_YELLOW}${BLACK}${BOLD}>>>>  $1 ${RESET}"
+  read -p "${BG_YELLOW}${BLACK}${BOLD}Press <Enter> to continue.${RESET}"
+}
+
+function pause_and_warn () {
+  if [[ $2 ]]; then echo ""; fi
+  echo -e "${BG_YELLOW}${BLACK}${BOLD}>>>>  $1 ${RESET}"
+  echo -e "${BG_YELLOW}${BLACK}${BOLD}>>>> ${RESET}"
+  read -p "${BG_YELLOW}${BLACK}${BOLD}>>>>  Continue? [Yy] ${RESET} " -n 1 -r
+
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    fail "Exiting..." true
+    exit 1;
+  fi
+}
+
+#-------------------------------------------------------------------------------
+# Ensure Homebrew installed correctly... (mac/homebrew_ensure_install.sh)
+#-------------------------------------------------------------------------------
+
+function i_fail_without_brew() {
+  command -v brew 2>/dev/null 1&>2
+  if [ $? != 0 ]; then
+    BREW_FAIL="true"
+  fi
+}
+
+function check_ownership_of() {
+  local CURR_FILE="$1"
+  local OWNER=$(ls -ld "$CURR_FILE" | awk '{print $3}')
+
+  if [ "$OWNER" != "$USER"  ]; then
+    echo "Ownership problem encountered in '${CURR_FILE}'! Should be '${USER}' but is '${OWNER}'."
+    BREW_FAIL="true"
+    return
+  else
+    echo "Ownership confirmed for '${CURR_FILE}'."
+  fi
+}
+
+function check_owners_in() {
+  local CURR_FILE="$1"
+  if [ -f "$CURR_FILE" ]; then
+    check_ownership_of $CURR_FILE
+  elif [ -d "$CURR_FILE" ]; then
+    check_ownership_of $CURR_FILE
+
+    local CURR_FILES="$CURR_FILE/*"
+    for CURR_F in $CURR_FILES; do
+      if [ -f "$CURR_F" ]; then
+        check_ownership_of $CURR_F
+      fi
+    done
+  fi
+}
+
+inform "Ensuring that Hombrew installed correctly..." true
+
+if [ ! -d /usr/local ]; then
+  fail "Could not continue: /usr/local was not created." true
+  echo ""
+  exit 1;
+else
+  echo "Hombrew folder exists."
+fi
+
+i_fail_without_brew
+if [ "$BREW_FAIL" ]; then
+  fail "Could not continue: Homebrew command not available." true
+  echo ""
+  exit 1;
+else
+  echo "Homebrew 'brew' command available."
+fi
+
+check_owners_in /usr/local
+if [ -d /usr/local/bin ]; then
+  check_owners_in /usr/local/bin
+fi
+if [ -d /usr/local/etc ]; then
+  check_owners_in /usr/local/etc
+fi
+if [ -d /usr/local/var ]; then
+  check_owners_in /usr/local/var
+fi
+
+if [ "$BREW_FAIL" ]; then
+  fail "Could not continue; incorrect permissions in /usr/local." true
+  echo ""
+  exit 1
+else
+  echo "Permissions overview passed."
+fi
+
+show "Complete!"
+
+#-------------------------------------------------------------------------------
+# Use Homebrew to install basic libs and compilation tools
+# (mac/homebrew_install_core_tools.sh)
+#-------------------------------------------------------------------------------
+
+inform "Installing basic libraries and tools via Homebrew..." true
+packagelist=(
+  # Autoconf is an extensible package of M4 macros that produce shell scripts to
+  # automatically configure software source code packages.
+  autoconf
+
+  # Automake is a tool for automatically generating Makefile.in
+  automake
+
+  # generic library support script
+  libtool
+
+  # a YAML 1.1 parser and emitter
+  libyaml
+
+  # neon is an HTTP and WebDAV client library
+  # neon
+
+  # A toolkit implementing SSL v2/v3 and TLS protocols with full-strength
+  # cryptography world-wide.
+  openssl
+
+  # pkg-config is a helper tool used when compiling applications and libraries.
+  pkg-config
+
+  # a script that uses ssh to log into a remote machine
+  ssh-copy-id
+
+  # XML C parser and toolkit
+  libxml2
+
+  # a language for transforming XML documents into other XML documents.
+  libxslt
+
+  # a conversion library between Unicode and traditional encoding
+  libiconv
+
+  # generates an index file of names found in source files of various programming
+  # languages.
+  ctags
+
+  # Adds history for node repl
+  readline
+)
+
+brew install ${packagelist[@]}
+show "Complete!"
+
+#-------------------------------------------------------------------------------
+# Install Homebrew version of Git & Hub (mac/git_install_hb.sh)
+#-------------------------------------------------------------------------------
+
+inform "Installing Git & Hub via Homebrew..." true
+brew install git
+brew install hub # additional Git commands
+show "Complete!"
+
+#-------------------------------------------------------------------------------
+# We're done! (utils/script_footer.sh)
+#-------------------------------------------------------------------------------
+
+inform "We're done!" true
+echo "#-- fin -- #"
+
+fail "Please close your terminal and open a new one!" true
+
