@@ -12,13 +12,14 @@ OS_NUMBER=$(echo $OS_VERSION | cut -d "." -f 2)
 MAC_ADDRS=$(ifconfig en0 | grep ether | sed -e 's/^[ \t|ether|\s|\n]*//')
 
 DESCRIPTION=`cat << EOFS
-      Computer Type:  Mac OSX $OS_VERSION
-      Long user name: $FULL_NAME
-      Short username: $USER_NAME
-      Computer name:  $COMP_NAME
-      LocalHost name: $LOCL_NAME
-      Full Hostname:  $HOST_NAME
-      Connection MAC: $MAC_ADDRS
+      Computer Type:   Mac OS $OS_VERSION
+      Short user name: $USER_NAME
+
+      Long user name:  $FULL_NAME
+      Computer name:   $COMP_NAME
+      LocalHost name:  $LOCL_NAME
+      Full Hostname:   $HOST_NAME
+      Connection MAC:  $MAC_ADDRS
 EOFS`
 
 inform "Loading your computer's information." true

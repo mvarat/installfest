@@ -7,8 +7,15 @@ inform "Ensuring the current user owns their home folder." true
 sudo chown -R ${USER} ~
 show "Complete!"
 
-# Repair disk permission
-inform "Running repair permissions..." true
-inform "  Note: this may take a VERY LONG TIME!"
-diskutil repairPermissions /
-show "Complete!"
+# Run repair disk permissions if prior to 10.11 (El Capitan)
+if [ "$OS_NUMBER" -lt "11" ]; then
+  inform "Running repair permissions..." true
+  inform "  Note: this may take a VERY LONG TIME!"
+  diskutil repairPermissions /
+  show "Complete!"
+else
+  inform "Skipping repair permissions, as this is disabled as of El Capitan." true
+  inform "  Search for diskutil repairPermissions and System Integrity " true
+  inform "  Protection to learn more. "
+fi
+
