@@ -17,37 +17,62 @@ show "Complete!"
 
 inform "Using Homebrew Cask to install apps..." true
 
-# The Browser
+# Our browser(s)
+# ----------------------------------------------------------------------
 brew cask install google-chrome
 # brew cask install google-chrome-canary
 
-# Another Important Browser
 brew cask install firefox
 # brew cask install firefox-nightly
+# ----------------------------------------------------------------------
 
+# Out text editor
+# ----------------------------------------------------------------------
 # The Text Editor, Sublime Text 2
 # (phlco) sublime text 3 is still in beta, therefore we'll stick to stable.
 # (phlco) atom won't support files over 2mb therefore we'll hold off.
 # brew cask install sublime-text
 # PJ: fuck it, v3
 brew cask install sublime-text3
+# ----------------------------------------------------------------------
 
-# A Screenshot Sharing Tool
-brew cask install mac2imgur
-
-# The Window Manager
-brew cask install spectacle
-
-# Our Chat Client
+# Our productivity suite
+# ----------------------------------------------------------------------
+# Our chat client
 brew cask install slack
 
-# The X Window Server
-brew cask install xquartz
+# Our window manager
+brew cask install spectacle
+
+# A screenshot sharing tool
+brew cask install mac2imgur
+
+# A clipboard enhancer
+brew cask install mac2imgur
 
 # Flux, makes the color of your computer's display adapt to the time of day
 # brew cask install flux
 
-# An Alternative Terminal
+# An alternative terminal
 # brew cask install iterm2
+# ----------------------------------------------------------------------
+
+# List of useful Quick Look plugins for developers
+# See http://www.makeuseof.com/tag/quick-look-plugins-make-file-browsing-os-x-even-better/
+# ----------------------------------------------------------------------
+# brew cask install qlcolorcode qlstephen qlmarkdown quicklook-json
+# brew cask install qlprettypatch quicklook-csv betterzipql
+# brew cask install webp-quicklook suspicious-package
+# ----------------------------------------------------------------------
+
+# The X Window Server
+# ----------------------------------------------------------------------
+# See:
+#   - https://en.wikipedia.org/wiki/XQuartz
+#   - https://support.apple.com/en-us/HT201341
+# Cross-platform *nix window server, useful for a number of developer
+# and open-source tools (Inkscape, Gimp, Meld, etc.)
+brew cask install xquartz
+# ----------------------------------------------------------------------
 
 show "Complete!"

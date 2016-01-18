@@ -55,8 +55,16 @@ PATH="$HOME/.rbenv/bin:$PATH"                              # RBENV
 PATH="/usr/local/share/npm/bin:$PATH"                      # NPM
 PATH="/usr/local/bin:/usr/local/sbin:$PATH"                # Homebrew
 PATH="/usr/local/heroku/bin:$PATH"                         # Heroku Toolbelt
-PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"       # Coreutils
-MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH" # Manual pages
+# Uncomment to use GNU versions of core utils by default.
+#   See scripts/mac/homebrew_install_core_utils.sh in the Installfest.
+#   In essence, Mac OS X is in BSD userland, while Linux et al are in
+#   GNU. GNU utils tend towards current POSIX compliance and are more
+#   feature-rich; thus they are aliased below to add color, clean output
+#   etc. BSD tools are more stable. Mac has also added some Mac-specific
+#   abilities to its set of BSD-like coreutils, however: check
+#   `man chmod`, eg.
+# PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"       # Coreutils
+# MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH" # Manual pages
 
 # =================
 # Settings
@@ -98,13 +106,13 @@ export HISTIGNORE="h"
 
 ## 'ls' lists information about files.
 # By default, show slashes for directories.
-alias ls='ls -F'
+alias ls='gls -F'
 
 # Enhanced ls, grouping directories and using colors.
-alias lf='ls --color -h --group-directories-first -F'
+alias lf='gls --color -h --group-directories-first -F'
 
 # Long list format including hidden files and file information.
-alias ll='ls --color -h --group-directories-first -Fla'
+alias ll='gls --color -h --group-directories-first -Fla'
 
 # List ACLs (finer-grained permissions that can be inherited).
 # ACLs are a necessary part of OSX fs since 10.6; see
@@ -126,10 +134,10 @@ alias h='history'
 alias reload="clear; source ~/.bash_profile"
 
 # Execute verbosely
-alias cp='cp -v'
-alias mv='mv -v'
-alias rm='rm -v'
-alias mkdir='mkdir -pv'
+alias cp='gcp -v'
+alias mv='gmv -v'
+alias rm='grm -v'
+alias mkdir='gmkdir -pv'
 
 # =================
 # Change System Settings

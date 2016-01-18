@@ -1,52 +1,66 @@
 #-------------------------------------------------------------------------------
-# Use Homebrew to install basic libs and compilation tools
-# (mac/homebrew_install_core_tools.sh)
+# Use Brew to install important CLI tools (mac/homebrew_install_core_tools.sh)
 #-------------------------------------------------------------------------------
 
-inform "Installing basic libraries and tools via Homebrew..." true
+inform "Installing core tools via Homebrew (qt, sqlite, etc.)..." true
+
+# Useful packages
 packagelist=(
-  # Autoconf is an extensible package of M4 macros that produce shell scripts to
-  # automatically configure software source code packages.
-  autoconf
+  # ASCII ART!!!!
+  figlet
 
-  # Automake is a tool for automatically generating Makefile.in
-  automake
+  # visualization tool for ERDs
+  graphviz
 
-  # generic library support script
-  libtool
+  # Image resizing
+  imagemagick
 
-  # a YAML 1.1 parser and emitter
-  libyaml
+  # PhantomJS is a headless WebKit scriptable with a JavaScript API
+  phantomjs
 
-  # neon is an HTTP and WebDAV client library
-  # neon
+  # WebKit implementation of qt for Capybara testing
+  qt
 
-  # A toolkit implementing SSL v2/v3 and TLS protocols with full-strength
-  # cryptography world-wide.
-  openssl
+  # Qt for Mac OS X
+  qt4
 
-  # pkg-config is a helper tool used when compiling applications and libraries.
-  pkg-config
+  # Advanced in-memory key-value store that persists on disk
+  redis
 
-  # a script that uses ssh to log into a remote machine
-  ssh-copy-id
+  # A self-contained, serverless, zero-configuration, transactional SQL
+  # database engine
+  sqlite
 
-  # XML C parser and toolkit
-  libxml2
+  # Update Subversion
+  # svn
 
-  # a language for transforming XML documents into other XML documents.
-  libxslt
-
-  # a conversion library between Unicode and traditional encoding
-  libiconv
-
-  # generates an index file of names found in source files of various programming
-  # languages.
-  ctags
-
-  # Adds history for node repl
-  readline
+  # Directory visualizer
+  tree
 )
 
 brew install ${packagelist[@]}
+
+# Note (PJ) Emacs and Vim?
+# brew install emacs
+# brew install vim --override-system-vi
+# brew install macvim --override-system-vim --custom-system-icons
+
+# Others...
+# brew install bash
+# Mac OS ships with bash 3.2
+# http://www.admon.org/applications/new-features-in-bash-4-0/
+# brew install gdb
+# gdb requires further actions to make it work. See `brew info gdb`.
+# brew install gpatch
+# brew install m4
+# brew install make
+# brew install nano
+# brew install file-formula
+# brew install git
+# brew install less
+# brew install openssh
+# brew install rsync
+# brew install unzip
+# brew install zsh
+
 show "Complete!"

@@ -23,7 +23,8 @@ github_add_ssh_key
 
 mac/homebrew_install
 mac/homebrew_ensure_install
-mac/homebrew_install_core_tools
+
+mac/homebrew_install_core_libs
 ## the above is used to compile languages and libs, so must come first
 
 ## the below uses brew, so must come after
@@ -40,8 +41,9 @@ mac/nvm_setup
 nvm_install
 nvm_install_version
 
+mac/homebrew_install_core_utils
+mac/homebrew_install_core_tools
 mac/homebrew_install_apps
-mac/homebrew_install_extra_tools
 mac/postgres_install_hb
 
 ## turned off for now, since students aren't asked to sign up
