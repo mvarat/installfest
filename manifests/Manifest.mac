@@ -42,8 +42,8 @@ nvm_install
 nvm_install_version
 
 mac/homebrew_install_core_utils
-mac/homebrew_install_core_tools
-mac/homebrew_install_apps
+mac/homebrew_install_cli_apps
+mac/homebrew_install_gui_apps
 mac/postgres_install_hb
 
 ## turned off for now, since students aren't asked to sign up

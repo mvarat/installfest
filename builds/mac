@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-COMPILED_AT='Mon Jan 18 12:39:46 PST 2016'
+COMPILED_AT='Mon Jan 18 12:50:27 PST 2016'
 #
 #  _           _        _ _  __           _
 # (_)_ __  ___| |_ __ _| | |/ _| ___  ___| |_
@@ -972,7 +972,7 @@ show "Complete!"
 # Use Brew to install important CLI tools (mac/homebrew_install_core_tools.sh)
 #-------------------------------------------------------------------------------
 
-inform "Installing core tools via Homebrew (qt, sqlite, etc.)..." true
+inform "Installing CLI apps via Homebrew (qt, sqlite, etc.)..." true
 
 # Useful packages
 packagelist=(
@@ -1052,7 +1052,7 @@ inform "Tapping Homebrew Cask's versions, for ST3..." true
 brew tap caskroom/versions
 show "Complete!"
 
-inform "Using Homebrew Cask to install apps..." true
+inform "Using Homebrew Cask to install GUI apps..." true
 
 # Our browser(s)
 # ----------------------------------------------------------------------
@@ -1085,7 +1085,7 @@ brew cask install spectacle
 brew cask install mac2imgur
 
 # A clipboard enhancer
-brew cask install mac2imgur
+brew cask install jumpcut
 
 # Flux, makes the color of your computer's display adapt to the time of day
 # brew cask install flux

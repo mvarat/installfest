@@ -15,7 +15,7 @@ inform "Tapping Homebrew Cask's versions, for ST3..." true
 brew tap caskroom/versions
 show "Complete!"
 
-inform "Using Homebrew Cask to install apps..." true
+inform "Using Homebrew Cask to install GUI apps..." true
 
 # Our browser(s)
 # ----------------------------------------------------------------------
@@ -48,7 +48,7 @@ brew cask install spectacle
 brew cask install mac2imgur
 
 # A clipboard enhancer
-brew cask install mac2imgur
+brew cask install jumpcut
 
 # Flux, makes the color of your computer's display adapt to the time of day
 # brew cask install flux

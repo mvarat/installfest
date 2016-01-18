@@ -2,7 +2,7 @@
 # Use Brew to install important CLI tools (mac/homebrew_install_core_tools.sh)
 #-------------------------------------------------------------------------------
 
-inform "Installing core tools via Homebrew (qt, sqlite, etc.)..." true
+inform "Installing CLI apps via Homebrew (qt, sqlite, etc.)..." true
 
 # Useful packages
 packagelist=(
