@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-COMPILED_AT='Mon Oct 19 20:43:49 PDT 2015'
+COMPILED_AT='Mon Jan 18 01:04:55 PST 2016'
 #
 #  _           _        _ _  __           _
 # (_)_ __  ___| |_ __ _| | |/ _| ___  ___| |_
@@ -222,13 +222,14 @@ OS_NUMBER=$(echo $OS_VERSION | cut -d "." -f 2)
 MAC_ADDRS=$(ifconfig en0 | grep ether | sed -e 's/^[ \t|ether|\s|\n]*//')
 
 DESCRIPTION=`cat << EOFS
-      Computer Type:  Mac OSX $OS_VERSION
-      Long user name: $FULL_NAME
-      Short username: $USER_NAME
-      Computer name:  $COMP_NAME
-      LocalHost name: $LOCL_NAME
-      Full Hostname:  $HOST_NAME
-      Connection MAC: $MAC_ADDRS
+      Computer Type:   Mac OS $OS_VERSION
+      Short user name: $USER_NAME
+
+      Long user name:  $FULL_NAME
+      Computer name:   $COMP_NAME
+      LocalHost name:  $LOCL_NAME
+      Full Hostname:   $HOST_NAME
+      Connection MAC:  $MAC_ADDRS
 EOFS`
 
 inform "Loading your computer's information." true
@@ -351,11 +352,18 @@ inform "Ensuring the current user owns their home folder." true
 sudo chown -R ${USER} ~
 show "Complete!"
 
-# Repair disk permission
-inform "Running repair permissions..." true
-inform "  Note: this may take a VERY LONG TIME!"
-diskutil repairPermissions /
-show "Complete!"
+# Run repair disk permissions if prior to 10.11 (El Capitan)
+if [ "$OS_NUMBER" -lt "11" ]; then
+  inform "Running repair permissions..." true
+  inform "  Note: this may take a VERY LONG TIME!"
+  diskutil repairPermissions /
+  show "Complete!"
+else
+  inform "Skipping repair permissions, as this is disabled as of El Capitan." true
+  inform "  Search for diskutil repairPermissions and System Integrity " true
+  inform "  Protection to learn more. "
+fi
+
 
 # rbenv_remove_rvm.sh
 
@@ -460,13 +468,32 @@ show "Key uploaded!" true
 # Install Homebrew (mac/homebrew_install.sh)
 #-------------------------------------------------------------------------------
 
-allow_group() {
+grant_current_user_permissions() {
+  local TARGET_DIR="$1"
+
+  sudo mkdir -p "$TARGET_DIR"
+
+  sudo chflags norestricted "$TARGET_DIR"
+
+  # assumes the current user is in the group admin!
+  sudo chown          $(whoami):admin "$TARGET_DIR"
+  sudo chown -R       $(whoami):admin "$TARGET_DIR"
+  sudo chmod u+rw     "$TARGET_DIR"
+  sudo chmod -R u+rw  "$TARGET_DIR"
+}
+
+allow_group_by_acls() {
   local GROUP_NAME="$1"
   local TARGET_DIR="$2"
   local PERMISSIONS="read,write,delete,add_file,add_subdirectory"
   local INHERITANCE="file_inherit,directory_inherit"
 
   sudo mkdir -p "$TARGET_DIR"
+
+  # -N and +a are special MacOSX chmod utilities that work with ACLs,
+  # they are not in either GNU or BSD utilities or Man pages…
+  #   -N removes all ACLs
+  #   +a adds ACLs
   sudo /bin/chmod -R -N "$TARGET_DIR"
   sudo /bin/chmod -R +a "group:$GROUP_NAME:allow $PERMISSIONS,$INHERITANCE" "$TARGET_DIR"
 }
@@ -474,18 +501,20 @@ allow_group() {
 inform "Installing the Homebrew package manager..." true
 
 # Set up permissions for /usr/local to anyone in admin group!
-echo "Setting ACL permissions of the Homebrew directory..."
-allow_group admin /usr/local
+echo "Setting permissions of the Homebrew directory..."
+grant_current_user_permissions /usr/local
+allow_group_by_acls admin /usr/local
 show "Complete!"
 
 # Set up permissions for /Library/Caches/Homebrew to anyone in admin group!
-echo "Setting ACL permissions of the Homebrew library cache..."
-allow_group admin /Library/Caches/Homebrew
+echo "Setting permissions of the Homebrew library cache..."
+grant_current_user_permissions /Library/Caches/Homebrew
+allow_group_by_acls admin /Library/Caches/Homebrew
 show "Complete!"
 
 # Installs Homebrew, our package manager
 # http://brew.sh/
-$(which -s brew)
+$(command -v brew 2>/dev/null 1&>2)
 if [[ $? != 0 ]]; then
   echo "Loading Homebrew installation script..."
   # piping echo to simulate hitting return in the brew install script
@@ -513,6 +542,86 @@ brew tap --repair
 
 # Remove outdated versions from the cellar
 brew cleanup
+show "Complete!"
+
+#-------------------------------------------------------------------------------
+# Ensure Homebrew installed correctly... (mac/homebrew_ensure_install.sh)
+#-------------------------------------------------------------------------------
+
+function i_fail_without_brew() {
+  command -v brew 2>/dev/null 1&>2
+  if [ $? != 0 ]; then
+    BREW_FAIL="true"
+  fi
+}
+
+function check_ownership_of() {
+  local CURR_FILE="$1"
+  local OWNER=$(ls -ld "$CURR_FILE" | awk '{print $3}')
+
+  if [ "$OWNER" != "$USER"  ]; then
+    echo "Ownership problem encountered in '${CURR_FILE}'! Should be '${USER}' but is '${OWNER}'."
+    BREW_FAIL="true"
+    return
+  else
+    echo "Ownership confirmed for '${CURR_FILE}'."
+  fi
+}
+
+function check_owners_in() {
+  local CURR_FILE="$1"
+  if [ -f "$CURR_FILE" ]; then
+    check_ownership_of $CURR_FILE
+  elif [ -d "$CURR_FILE" ]; then
+    check_ownership_of $CURR_FILE
+
+    local CURR_FILES="$CURR_FILE/*"
+    for CURR_F in $CURR_FILES; do
+      if [ -f "$CURR_F" ]; then
+        check_ownership_of $CURR_F
+      fi
+    done
+  fi
+}
+
+inform "Ensuring that Hombrew installed correctly..." true
+
+if [ ! -d /usr/local ]; then
+  fail "Could not continue: /usr/local was not created." true
+  echo ""
+  exit 1;
+else
+  echo "Hombrew folder exists."
+fi
+
+i_fail_without_brew
+if [ "$BREW_FAIL" ]; then
+  fail "Could not continue: Homebrew command not available." true
+  echo ""
+  exit 1;
+else
+  echo "Homebrew 'brew' command available."
+fi
+
+check_owners_in /usr/local
+if [ -d /usr/local/bin ]; then
+  check_owners_in /usr/local/bin
+fi
+if [ -d /usr/local/etc ]; then
+  check_owners_in /usr/local/etc
+fi
+if [ -d /usr/local/var ]; then
+  check_owners_in /usr/local/var
+fi
+
+if [ "$BREW_FAIL" ]; then
+  fail "Could not continue; incorrect permissions in /usr/local." true
+  echo ""
+  exit 1
+else
+  echo "Permissions overview passed."
+fi
+
 show "Complete!"
 
 #-------------------------------------------------------------------------------

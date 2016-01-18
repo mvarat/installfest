@@ -22,6 +22,7 @@ github_capture_credentials
 github_add_ssh_key
 
 mac/homebrew_install
+mac/homebrew_ensure_install
 mac/homebrew_install_core_tools
 ## the above is used to compile languages and libs, so must come first
 
