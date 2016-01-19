@@ -16,6 +16,6 @@ if [ "$OS_NUMBER" -lt "11" ]; then
 else
   inform "Skipping repair permissions, as this is disabled as of El Capitan." true
   inform "  Search for diskutil repairPermissions and System Integrity " true
-  inform "  Protection to learn more. "
+  inform "  Protection on Google to learn more. "
 fi
 
