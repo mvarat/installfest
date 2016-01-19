@@ -13,14 +13,14 @@ function get_credentials() {
 function check_credentials() {
   local UNAME="$1"
   local PASS="$2"
-  curl https://api.github.com/user/keys \
+  curl https://api.github.com/user \
     -H "User-Agent: WDIInstallFest" \
     -H "Accept: application/vnd.github.v3+json" \
     -u "$UNAME:$PASS" \
     2>/dev/null \
     | ruby -e " \
       json = JSON.parse(STDIN.gets)
-      if json.class == Array || json.key('id')
+      if json.key?('id')
         puts
         puts('Authenticated!')
         exit 0

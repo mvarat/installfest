@@ -6,6 +6,28 @@
 # This script follows these instructions
 # `https://help.github.com/articles/generating-ssh-keys`
 
+function get_keys() {
+  local UNAME="$1"
+  local PASS="$2"
+  curl https://api.github.com/user/keys \
+    -H "User-Agent: WDIInstallFest" \
+    -H "Accept: application/vnd.github.v3+json" \
+    -u "$UNAME:$PASS" \
+    2>/dev/null \
+    | ruby -e " \
+      json = JSON.parse(STDIN.gets)
+      if json.length > 0
+        puts
+        puts('Keys found!')
+        exit 0
+      else
+        puts
+        puts('No keys exist.")
+        exit 1
+      end
+    " -r JSON
+}
+
 # Steps:
 # 0. check user credentials: if they fail announce and skip the rest.
 # 1. check for SSH keys stored on GitHub
@@ -19,8 +41,13 @@
 
 
 if [ $GITHUB_AUTHENTICATED ]; then
+  inform "Checking for existing SSH keys on your GitHub profile..."
+  # https://developer.github.com/v3/users/keys/#list-your-public-keys
 
-
+  GITHUB_NAME
+  GITHUB_PASSWORD
+else
+  warn "Not checking for, or generating, SSH keys for GitHub." true
 fi
 
 
@@ -29,14 +56,6 @@ fi
 
 
 
-
-# curl https://api.github.com/user/keys \
-#   -H "User-Agent: WDIInstallFest" \
-#   -H "Accept: application/vnd.github.v3+json" \
-#   -u "hews:cLovesp15" \
-#   | ruby -e "json = JSON.parse(STDIN.gets);puts json" -r JSON
-
-#   jsawk -a 'return this[0]'
 
 # function get_profile() {
 #   local UNAME="$1"

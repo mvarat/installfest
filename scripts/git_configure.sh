@@ -5,7 +5,7 @@
 inform "Setting Git configurations..." true
 echo ""
 
-read -p "Enter your Github Email: "      GITHUB_EMAIL
+read -p "Enter the email address you use for GitHub: " GITHUB_EMAIL
 read -p "Enter your (real) first name: " FNAME
 read -p "Enter your (real) last name: "  LNAME
 
