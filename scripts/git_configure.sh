@@ -3,6 +3,11 @@
 #-------------------------------------------------------------------------------
 
 inform "Setting Git configurations..." true
+echo ""
+
+read -p "Enter your Github Email: "      GITHUB_EMAIL
+read -p "Enter your (real) first name: " FNAME
+read -p "Enter your (real) last name: "  LNAME
 
 # https://www.kernel.org/pub/software/scm/git/docs/git-config.html
 git config --global user.name    "$fname $lname"
@@ -45,4 +50,5 @@ git config --global alias.set-deploy = "!git config --local alias.deploy \"subtr
 git config --global alias.co 'checkout'
 git config --global alias.bs 'branch -v'
 git config --global alias.rs 'remote -v'
-show "Complete!"
+
+show "Complete!" true

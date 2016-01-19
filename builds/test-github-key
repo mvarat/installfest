@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-COMPILED_AT='Mon Jan 18 14:10:33 PST 2016'
+COMPILED_AT='Mon Jan 18 17:31:30 PST 2016'
 #
 #  _           _        _ _  __           _
 # (_)_ __  ___| |_ __ _| | |/ _| ___  ___| |_
@@ -182,539 +182,6 @@ function pause_and_warn () {
 }
 
 #-------------------------------------------------------------------------------
-# We begin! (utils/script_instructions.sh)
-#-------------------------------------------------------------------------------
-
-show "${BOLD}Welcome to the Installfest! ${RESET}"
-show ""
-show "Throughout the script you will be asked to enter your password. "
-show "Unless otherwise stated, this is asking for your "
-show "${BOLD}computer's password. ${RESET}"
-show ""
-show "This script will install, update, and configure files and "
-show "applications that you will use in class."
-
-# utils/password_capture.sh
-
-# capture the user's password
-inform "Enter your computer's password so that " true
-inform "  we can make the necessary changes. "
-inform "  The password will not be visible as you type: "
-
-sudo -p "Password:" echo "${BG_WHITE}> Thank you! ${RESET}"
-
-# mac/os_version.sh
-
-# Determine OS version
-OS_VERSION=$(sw_vers -productVersion)
-
-#-------------------------------------------------------------------------------
-# Ensure that the user's computer set up works (mac/os_ensure_valid_setup.sh)
-#-------------------------------------------------------------------------------
-
-COMP_NAME=$(scutil --get ComputerName)
-LOCL_NAME=$(scutil --get LocalHostName)
-HOST_NAME=$(hostname)
-USER_NAME=$(id -un)
-FULL_NAME=$(finger "$USER_NAME" | awk '/Name:/ {print $4" "$5}')
-USER_GRPS=$(id -Gn $USER_NAME)
-OS_NUMBER=$(echo $OS_VERSION | cut -d "." -f 2)
-MAC_ADDRS=$(ifconfig en0 | grep ether | sed -e 's/^[ \t|ether|\s|\n]*//')
-
-DESCRIPTION=`cat << EOFS
-      Computer Type:   Mac OS $OS_VERSION
-      Short user name: $USER_NAME
-
-      Long user name:  $FULL_NAME
-      Computer name:   $COMP_NAME
-      LocalHost name:  $LOCL_NAME
-      Full Hostname:   $HOST_NAME
-      Connection MAC:  $MAC_ADDRS
-EOFS`
-
-inform "Loading your computer's information." true
-inform "Your current setup is:"
-printf "$DESCRIPTION\n"
-inform "Checking the validity of this set up."
-inform "If it is not valid, it will fail or warn you."
-echo "..."
-
-# Check if current user is admin.
-
-if echo "$USER_GRPS" | grep -q -w admin; then
-  echo "" > /dev/null
-else
-  fail "The current user does not have administrator privileges. You must " true
-  fail "  run this program from an admin user. Ask an instructor for help."
-  fail "Exiting..." true
-  exit 1
-fi
-
-# Check if OS version is valid.
-
-if [ "$OS_NUMBER" -lt "6" ]; then
-  fail "You need to have Mac OS X 10.6 (Snow Leopard) or higher installed" true
-  fail "  in order to take WDI. Please contact an instructor or producer."
-  fail "Exiting..." true
-  exit 1
-fi
-
-if [ "$OS_NUMBER" -eq "6" ]; then
-  warn "Warning!" true
-  warn "While you can take WDI with  Mac OS X 10.6 (Snow Leopard), it is "
-  warn "  not supported by this script. You can continue to run the      "
-  warn "  script, but any problems need to be taken care of by your      "
-  warn "  instructional team. It is recommended that you upgrade your    "
-  pause_and_warn "  computer.                                                      "
-fi
-
-# Check if username is valid.
-
-if [[ "$USER_NAME" =~ " " ]]; then
-  fail "Your username '${USER_NAME}' has a space. This complictes using " true
-  fail "  command line tools, and can even break some programs. Change  "
-  fail "  your username before continuing.                              "
-  fail "Exiting..." true
-  exit 1
-fi
-
-LOWERCASE=$(echo "$USER_NAME" | tr '[A-Z]' '[a-z]')
-if [ "$USER_NAME" != "$LOWERCASE" ]; then
-  warn "Warning!" true
-  warn "Your username '${USER_NAME}' has 'mixed-case'; it should be entirely in "
-  warn "  lowercase. This could lead to some issues where certain tools "
-  warn "  that are case-sensitive, and others that are not, don't work  "
-  warn "  well together. It is suggested that you change your username. "
-  pause_and_warn "  PS: this also goes for your GitHub username!                  "
-fi
-
-show "Setup is valid!"
-
-#-------------------------------------------------------------------------------
-# Update software on Mac (mac/os_update_software.sh)
-#-------------------------------------------------------------------------------
-
-# Check for recommended software updates
-inform "Running software update on Mac OS... " true
-sudo softwareupdate -i -r --ignore iTunes > /dev/null 2>&1
-show "Software updated!"
-
-#-------------------------------------------------------------------------------
-# Check for & install commandline tools (mac/os_install_commandline_tools.sh)
-#-------------------------------------------------------------------------------
-
-inform "Checking for XCode Command Line Tools..." true
-
-# Check that command line tools are installed
-case $OS_VERSION in
-  *10.11*) cmdline_version="CLTools_Executables" ;; # El Capitan
-  *10.10*) cmdline_version="CLTools_Executables" ;; # Yosemite
-  *10.9*)  cmdline_version="CLTools_Executables" ;; # Mavericks
-  *10.8*)  cmdline_version="DeveloperToolsCLI"   ;; # Mountain Lion
-  *10.7*)  cmdline_version="DeveloperToolsCLI"   ;; # Lion
-  *10.6*)  cmdline_version="DeveloperToolsCLILeo"
-           fail "Outdated OS. Considering upgrading before continuing." true;; # Snow Leopard
-           # Force the user to upgrade if they're below 10.6
-  *) fail "Sorry! You'll have to upgrade your OS to $MINIMUM_MAC_OS or above." true; exit 1;;
-esac
-
-# Check for Command Line Tools based on OS versions
-if [ ! -z $(pkgutil --pkgs=com.apple.pkg.$cmdline_version) ]; then
-  show "Command Line Tools are installed!"
-elif [[ $OS_VERSION == *10.6** ]]; then
-  fail "Command Line Tools are not installed!" true
-  fail "  Downloading and installing the GCC compiler."
-  fail "  When you're done rerun the Installfest script..."
-  curl -OLk https://github.com/downloads/kennethreitz/osx-gcc-installer/GCC-10.6.pkg
-  open GCC-10.6.pkg
-  exit 1
-elif [[ $OS_VERSION == *10.7* ]] || [[ $OS_VERSION == *10.8* ]]; then
-  fail "Command Line Tools are not installed!" true
-  fail "Register for a Developer Account"
-  fail "  Download the Command Lion Tools from:"
-  fail "    https://developer.apple.com/downloads/index.action"
-  fail "  and then rerun the Installfest script..."
-  exit 1
-else
-  fail "Command Line Tools are not installed!" true
-  fail "  Running 'xcode-select --install' Please click continue!"
-  fail "  After installing please rerun the Installfest script..."
-  xcode-select --install
-  exit 1
-fi
-
-#-------------------------------------------------------------------------------
-# Repair disk permissions (mac/os_repair_permissions.sh)
-#-------------------------------------------------------------------------------
-
-# Ensure user has full control over their folder
-inform "Ensuring the current user owns their home folder." true
-sudo chown -R ${USER} ~
-show "Complete!"
-
-# Run repair disk permissions if prior to 10.11 (El Capitan)
-if [ "$OS_NUMBER" -lt "11" ]; then
-  inform "Running repair permissions..." true
-  inform "  Note: this may take a VERY LONG TIME!"
-  diskutil repairPermissions /
-  show "Complete!"
-else
-  inform "Skipping repair permissions, as this is disabled as of El Capitan." true
-  inform "  Search for diskutil repairPermissions and System Integrity " true
-  inform "  Protection to learn more. "
-fi
-
-
-#-------------------------------------------------------------------------------
-# Install Homebrew (mac/homebrew_install.sh)
-#-------------------------------------------------------------------------------
-
-grant_current_user_permissions() {
-  local TARGET_DIR="$1"
-
-  sudo mkdir -p "$TARGET_DIR"
-
-  sudo chflags norestricted "$TARGET_DIR"
-
-  # assumes the current user is in the group admin!
-  sudo chown          $(whoami):admin "$TARGET_DIR"
-  sudo chown -R       $(whoami):admin "$TARGET_DIR"
-  sudo chmod u+rw     "$TARGET_DIR"
-  sudo chmod -R u+rw  "$TARGET_DIR"
-}
-
-allow_group_by_acls() {
-  local GROUP_NAME="$1"
-  local TARGET_DIR="$2"
-  local PERMISSIONS="read,write,delete,add_file,add_subdirectory"
-  local INHERITANCE="file_inherit,directory_inherit"
-
-  sudo mkdir -p "$TARGET_DIR"
-
-  # -N and +a are special MacOSX chmod utilities that work with ACLs,
-  # they are not in either GNU or BSD utilities or Man pages…
-  #   -N removes all ACLs
-  #   +a adds ACLs
-  sudo /bin/chmod -R -N "$TARGET_DIR"
-  sudo /bin/chmod -R +a "group:$GROUP_NAME:allow $PERMISSIONS,$INHERITANCE" "$TARGET_DIR"
-}
-
-inform "Installing the Homebrew package manager..." true
-
-# Set up permissions for /usr/local to anyone in admin group!
-echo "Setting permissions of the Homebrew directory..."
-grant_current_user_permissions /usr/local
-allow_group_by_acls admin /usr/local
-show "Complete!"
-
-# Set up permissions for /Library/Caches/Homebrew to anyone in admin group!
-echo "Setting permissions of the Homebrew library cache..."
-grant_current_user_permissions /Library/Caches/Homebrew
-allow_group_by_acls admin /Library/Caches/Homebrew
-show "Complete!"
-
-# Installs Homebrew, our package manager
-# http://brew.sh/
-$(command -v brew 2>/dev/null 1&>2)
-if [[ $? != 0 ]]; then
-  echo "Loading Homebrew installation script..."
-  # piping echo to simulate hitting return in the brew install script
-  echo | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-  show "Complete!"
-else
-  show "Homebrew is already installed!"
-fi
-
-inform "Updating Homebrew and formulae..." true
-brew update # Make sure we're using the latest Homebrew
-brew upgrade # Upgrade any already-installed formulae
-show "Complete!"
-
-inform "Adding Homebrew taps..." true
-# These formulae duplicate software provided by OS X
-# though may provide more recent or bugfix versions, and
-# extra versions (other than default) of certain packages.
-brew tap homebrew/dupes
-brew tap homebrew/versions # necessary for specific versions of libs
-
-# Ensures all tapped formula are symlinked into Library/Formula
-# and prunes dead formula from Library/Formula.
-brew tap --repair
-
-# Remove outdated versions from the cellar
-brew cleanup
-show "Complete!"
-
-#-------------------------------------------------------------------------------
-# Ensure Homebrew installed correctly... (mac/homebrew_ensure_install.sh)
-#-------------------------------------------------------------------------------
-
-function i_fail_without_brew() {
-  command -v brew 2>/dev/null 1&>2
-  if [ $? != 0 ]; then
-    BREW_FAIL="true"
-  fi
-}
-
-function check_ownership_of() {
-  local CURR_FILE="$1"
-  local OWNER=$(ls -ld "$CURR_FILE" | awk '{print $3}')
-
-  if [ "$OWNER" != "$USER"  ]; then
-    echo "Ownership problem encountered in '${CURR_FILE}'! Should be '${USER}' but is '${OWNER}'."
-    BREW_FAIL="true"
-    return
-  else
-    echo "Ownership confirmed for '${CURR_FILE}'."
-  fi
-}
-
-function check_owners_in() {
-  local CURR_FILE="$1"
-  if [ -f "$CURR_FILE" ]; then
-    check_ownership_of $CURR_FILE
-  elif [ -d "$CURR_FILE" ]; then
-    check_ownership_of $CURR_FILE
-
-    local CURR_FILES="$CURR_FILE/*"
-    for CURR_F in $CURR_FILES; do
-      if [ -f "$CURR_F" ]; then
-        check_ownership_of $CURR_F
-      fi
-    done
-  fi
-}
-
-inform "Ensuring that Hombrew installed correctly..." true
-
-if [ ! -d /usr/local ]; then
-  fail "Could not continue: /usr/local was not created." true
-  echo ""
-  exit 1;
-else
-  echo "Hombrew folder exists."
-fi
-
-i_fail_without_brew
-if [ "$BREW_FAIL" ]; then
-  fail "Could not continue: Homebrew command not available." true
-  echo ""
-  exit 1;
-else
-  echo "Homebrew 'brew' command available."
-fi
-
-check_owners_in /usr/local
-if [ -d /usr/local/bin ]; then
-  check_owners_in /usr/local/bin
-fi
-if [ -d /usr/local/etc ]; then
-  check_owners_in /usr/local/etc
-fi
-if [ -d /usr/local/var ]; then
-  check_owners_in /usr/local/var
-fi
-
-if [ "$BREW_FAIL" ]; then
-  fail "Could not continue; incorrect permissions in /usr/local." true
-  echo ""
-  exit 1
-else
-  echo "Permissions overview passed."
-fi
-
-show "Complete!"
-
-#-------------------------------------------------------------------------------
-# Use Homebrew to install basic libs and compilation tools
-# (mac/homebrew_install_core_libs.sh)
-#-------------------------------------------------------------------------------
-
-inform "Installing core libraries via Homebrew (autoconf, automake, etc.)..." true
-packagelist=(
-  # Autoconf is an extensible package of M4 macros that produce shell scripts to
-  # automatically configure software source code packages.
-  autoconf
-
-  # Automake is a tool for automatically generating Makefile.in
-  automake
-
-  # generic library support script
-  libtool
-
-  # a YAML 1.1 parser and emitter
-  libyaml
-
-  # neon is an HTTP and WebDAV client library
-  # neon
-
-  # A toolkit implementing SSL v2/v3 and TLS protocols with full-strength
-  # cryptography world-wide.
-  openssl
-
-  # pkg-config is a helper tool used when compiling applications and libraries.
-  pkg-config
-
-  # a script that uses ssh to log into a remote machine
-  ssh-copy-id
-
-  # XML C parser and toolkit
-  libxml2
-
-  # a language for transforming XML documents into other XML documents.
-  libxslt
-
-  # a conversion library between Unicode and traditional encoding
-  libiconv
-
-  # generates an index file of names found in source files of various programming
-  # languages.
-  ctags
-
-  # Adds history for node repl
-  readline
-)
-
-brew install ${packagelist[@]}
-show "Complete!"
-
-#-------------------------------------------------------------------------------
-# Use Brew to GNU's version of the core Unix utilites: ls, cat, find, etc.
-# (mac/homebrew_install_core_utils.sh)
-#-------------------------------------------------------------------------------
-
-inform "Installing GNU core utils via Homebrew (gls, gcat, gfind, etc.)..." true
-
-packagelist=(
-  # The essential GNU core utilities.
-  # Linked to /usr/local/bin.
-  # Linked in /usr/local/opt/coreutils/libexec/gnubin without the "g"-prefix
-  #   in case you want to override the OS X defaults. The default bash_profile
-  #   included in /settings should have clear directions on how to do this!
-  coreutils
-
-  # Homebrew coreutils message about PATH and loading the GNU coreutils by
-  # default.
-  # --------------------------------------------------------------------
-  # ==> Caveats
-  # All commands have been installed with the prefix 'g'.
-  #
-  # If you really need to use these commands with their normal names, you
-  # can add a "gnubin" directory to your PATH from your bashrc like:
-  #
-  #     PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-  #
-  # Additionally, you can access their man pages with normal names if you add
-  # the "gnuman" directory to your MANPATH from your bashrc as well:
-  #
-  #     MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
-  # --------------------------------------------------------------------
-
-  # More: gfind, glocate, gupdatedb, gxargs
-  # Linked to /usr/local/bin.
-  findutils
-
-  # Further GNU utilities can be added with the following packages. For
-  # more, see
-  # https://www.topbug.net/blog/2013/04/14/install-and-use-gnu-command-line-tools-in-mac-os-x/
-  #
-  # binutils
-  # coreutils (--with-default-names)
-  # diffutils
-  # ed (--with-default-names)
-  # findutils (--with-default-names)
-  # gawk
-  # gnu-getopt (--with-default-names)
-  # gnu-indent (--with-default-names)
-  # gnu-sed (--with-default-names)
-  # gnu-tar (--with-default-names)
-  # gnu-which (--with-default-names)
-  # gnutls
-  # grep (--with-default-names)
-  # gzip
-  # screen
-  # watch
-  # wdiff (--with-gettext)
-  # wget
-)
-
-brew install ${packagelist[@]}
-
-show "Complete!"
-
-#-------------------------------------------------------------------------------
-# Use Brew to install important CLI tools (mac/homebrew_install_core_tools.sh)
-#-------------------------------------------------------------------------------
-
-inform "Installing CLI apps via Homebrew (qt, sqlite, etc.)..." true
-
-# Useful packages
-packagelist=(
-  # ASCII ART!!!!
-  figlet
-
-  # visualization tool for ERDs
-  graphviz
-
-  # Image resizing
-  imagemagick
-
-  # Command-line JSON parser.
-  # See https://github.com/micha/jsawk &
-  # http://blog.xebia.com/json-shell-scripting-with-jsawk/
-  jsawk
-
-  # PhantomJS is a headless WebKit scriptable with a JavaScript API
-  phantomjs
-
-  # WebKit implementation of qt for Capybara testing
-  qt
-
-  # Qt for Mac OS X
-  qt4
-
-  # Advanced in-memory key-value store that persists on disk
-  redis
-
-  # A self-contained, serverless, zero-configuration, transactional SQL
-  # database engine
-  sqlite
-
-  # Update Subversion
-  # svn
-
-  # Directory visualizer
-  tree
-)
-
-brew install ${packagelist[@]}
-
-# Note (PJ) Emacs and Vim?
-# brew install emacs
-# brew install vim --override-system-vi
-# brew install macvim --override-system-vim --custom-system-icons
-
-# Others...
-# brew install bash
-# Mac OS ships with bash 3.2
-# http://www.admon.org/applications/new-features-in-bash-4-0/
-# brew install gdb
-# gdb requires further actions to make it work. See `brew info gdb`.
-# brew install gpatch
-# brew install m4
-# brew install make
-# brew install nano
-# brew install file-formula
-# brew install git
-# brew install less
-# brew install openssh
-# brew install rsync
-# brew install unzip
-# brew install zsh
-
-show "Complete!"
-
-#-------------------------------------------------------------------------------
 # Install Homebrew version of Git & Hub (mac/git_install_hb.sh)
 #-------------------------------------------------------------------------------
 
@@ -724,28 +191,15 @@ brew install hub # additional Git commands
 show "Complete!"
 
 #-------------------------------------------------------------------------------
-# Install Git Completion (git_completion.sh)
-#-------------------------------------------------------------------------------
-
-inform "Installing a bash script to support Git CLI tab-completion..." true
-
-GIT_COMPLETION_URL="https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash"
-GIT_COMPLETION_FILE="$HOME/.git-completion.bash"
-
-curl -o "$GIT_COMPLETION_FILE" "$GIT_COMPLETION_URL"
-
-if [[ -e "$GIT_COMPLETION_FILE" ]]; then
-  show "File '$GIT_COMPLETION_FILE' created!"
-else
-  fail "${GIT_COMPLETION_FILE} not created... " true
-  pause_awhile "Ask an instructor for help if necessary. "
-fi
-
-#-------------------------------------------------------------------------------
 # Add user's Git info to ~/.gitconfig (git_configure.sh)
 #-------------------------------------------------------------------------------
 
 inform "Setting Git configurations..." true
+echo ""
+
+read -p "Enter your Github Email: "      GITHUB_EMAIL
+read -p "Enter your (real) first name: " FNAME
+read -p "Enter your (real) last name: "  LNAME
 
 # https://www.kernel.org/pub/software/scm/git/docs/git-config.html
 git config --global user.name    "$fname $lname"
@@ -788,7 +242,66 @@ git config --global alias.set-deploy = "!git config --local alias.deploy \"subtr
 git config --global alias.co 'checkout'
 git config --global alias.bs 'branch -v'
 git config --global alias.rs 'remote -v'
-show "Complete!"
+
+show "Complete!" true
+
+#-------------------------------------------------------------------------------
+# Capture GitHub credentials (github_capture_credentials.sh)
+#-------------------------------------------------------------------------------
+
+inform "Enter information to set up your GitHub configuration." true
+
+function get_credentials() {
+  read -p  "Enter your Github Username: " GITHUB_NAME
+  read -sp "Enter your Github Password: " GITHUB_PASSWORD
+}
+
+# https://developer.github.com/v3/users/#get-the-authenticated-user
+function check_credentials() {
+  local UNAME="$1"
+  local PASS="$2"
+  curl https://api.github.com/user/keys \
+    -H "User-Agent: WDIInstallFest" \
+    -H "Accept: application/vnd.github.v3+json" \
+    -u "$UNAME:$PASS" \
+    2>/dev/null \
+    | ruby -e " \
+      json = JSON.parse(STDIN.gets)
+      if json.class == Array || json.key('id')
+        puts
+        puts('Authenticated!')
+        exit 0
+      else
+        puts
+        puts('Failed: ' + json.to_s)
+        exit 1
+      end
+    " -r JSON
+}
+
+CHECK_NOT_PASSED="true"
+COUNTER=1
+while [ $COUNTER -lt 4 ] && [ $CHECK_NOT_PASSED ]; do
+  get_credentials
+  check_credentials $GITHUB_NAME $GITHUB_PASSWORD
+  if [ $? -eq 0 ]; then
+    echo ""
+    CHECK_NOT_PASSED=""
+  else
+    echo ""
+    [ $COUNTER -lt 3 ] && echo "Please try again! $((3-$COUNTER)) chance(s) left... "
+    let COUNTER=COUNTER+1
+  fi
+done
+
+if [ $CHECK_NOT_PASSED ]; then
+  GITHUB_AUTHENTICATED=""
+  echo "Skipping GitHub authentication and SSH Key generation."
+else
+  GITHUB_AUTHENTICATED="true"
+fi
+
+show "Thank you!"
 
 #-------------------------------------------------------------------------------
 # We're done! (utils/script_footer.sh)
@@ -798,4 +311,5 @@ inform "We're done!" true
 echo "#-- fin -- #"
 
 fail "Please close your terminal and open a new one!" true
+echo ""
 
